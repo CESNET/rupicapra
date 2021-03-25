@@ -38,6 +38,13 @@ def extract_data(ds, hostname):
     except KeyError:
         pass
 
+    try:
+        osc = ds['czechlight-roadm-device:line']['osc']
+        for direction in ('rx', 'tx'):
+            push_gauge(buf, 'optical_power', {'host': hostname, 'channel': 'OSC', 'where': f'LINE-{direction}'}, osc[f'{direction}-power'])
+    except KeyError:
+        pass
+
     return buf
 
 
