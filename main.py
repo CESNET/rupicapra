@@ -6,6 +6,12 @@ import sys
 import urllib
 
 
+def plain_port(port):
+    if port.startswith('E'):
+        return port[1:]
+    return port
+
+
 def push_gauge(buf, name, params, value):
     keys = ','.join(f'{k}="{v}"' for (k, v) in params.items())
     buf.append(f'{name}{{{keys}}} {value}')
@@ -17,8 +23,14 @@ def extract_data(ds, hostname):
     try:
         MCs = ds['czechlight-roadm-device:media-channels']
         for channel in MCs:
-            for point in ('common-in', 'common-out'):
-                push_gauge(buf, 'optical_power', {'host': hostname, 'channel': channel["channel"], 'where': point}, channel['power'][point])
+            for point in ('common-in', 'common-out', 'leaf-in', 'leaf-out'):
+                if point in channel['power']:
+                    keys = {'host': hostname, 'channel': channel["channel"], 'where': point}
+                    if point == 'leaf-in':
+                        keys['port'] = plain_port(channel['add']['port'])
+                    elif point == 'leaf-out':
+                        keys['port'] = plain_port(channel['drop']['port'])
+                    push_gauge(buf, 'optical_power', keys, channel['power'][point])
     except KeyError:
         pass
 
