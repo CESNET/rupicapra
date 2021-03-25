@@ -20,6 +20,9 @@ def extract_data(ds, hostname):
             for point in ('common-in', 'common-out', 'leaf-in', 'leaf-out'):
                 if point in channel['power']:
                     push_gauge(buf, 'optical_power', {'host': hostname, 'channel': channel["channel"], 'where': point}, channel['power'][point])
+            for direction in ('add', 'drop'):
+                if direction in channel:
+                    push_gauge(buf, 'mc_routing', {'host': hostname, 'channel': channel["channel"], 'direction': direction}, channel[direction]['port'])
     except KeyError:
         pass
 
