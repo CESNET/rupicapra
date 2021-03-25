@@ -17,8 +17,17 @@ def extract_data(ds, hostname):
     try:
         MCs = ds['czechlight-roadm-device:media-channels']
         for channel in MCs:
-            for point in ('common-in', 'common-out'):
-                push_gauge(buf, 'optical_power', {'host': hostname, 'channel': channel["channel"], 'where': point}, channel['power'][point])
+            for point in ('common-in', 'common-out', 'leaf-in', 'leaf-out'):
+                if point in channel['power']:
+                    if point == 'leaf-in':
+                        where = channel['add']['port']
+                    elif point == 'leaf-out':
+                        where = channel['drop']['port']
+                    else:
+                        where = point
+                    if where.startswith('E'):
+                        where = where[1:]
+                    push_gauge(buf, 'optical_power', {'host': hostname, 'channel': channel["channel"], 'where': where}, channel['power'][point])
     except KeyError:
         pass
 
