@@ -1,0 +1,491 @@
+<html>
+<head>
+<title>ROADMs</title>
+<style type="text/css">
+#topo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+#graph {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+</style>
+</head>
+<body>
+<div id="topo"> </div>
+<iframe id="graph" width=700 height=350 > </iframe>
+<script type="module">
+import cytoscape from "https://unpkg.com/cytoscape@3.18.1/dist/cytoscape.esm.min.js";
+
+var cy = cytoscape({
+  container: document.getElementById('topo'),
+
+  style: [
+    {
+      selector: 'node',
+      style: {
+        'background-color': '#666',
+        'label': 'data(label)',
+      },
+    },
+    {
+      selector: 'node.roadm',
+      style: {
+        'background-color': '#aaa',
+        'background-opacity': '0.1',
+      },
+    },
+    {
+      selector: 'node.port.leaf',
+      style: {
+        'text-valign': 'center',
+        'text-halign': 'center',
+      },
+    },
+    {
+      selector: 'edge',
+      style: {
+        'width': 3,
+        'line-color': '#ccc',
+        'target-arrow-color': '#ccc',
+        //'curve-style': 'bezier',
+      }
+    },
+    {
+      selector: 'edge.intlink',
+      style: {
+        'width': 1,
+        'line-color': 'black',
+        'curve-style': 'haystack',
+      }
+    },
+    {
+      selector: 'edge.mc.highlighted',
+      style: {
+        'line-color': 'red',
+        'target-arrow-color': 'red',
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 4,
+        'curve-style': 'straight',
+      }
+    },
+    {
+      selector: 'edge.always_full_spectrum_forward',
+      style: {
+        'line-color': 'brown',
+        'target-arrow-color': 'brown',
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 4,
+        'curve-style': 'straight',
+      }
+    },
+    {
+      selector: 'edge.always_full_spectrum_backward',
+      style: {
+        'line-color': 'brown',
+        'source-arrow-color': 'brown',
+        'source-arrow-shape': 'triangle',
+        'arrow-scale': 4,
+        'curve-style': 'straight',
+      }
+    },
+    {
+      selector: 'edge.always_full_spectrum',
+      style: {
+        'line-color': 'brown',
+        'target-arrow-color': 'brown',
+        'target-arrow-shape': 'triangle',
+        'source-arrow-color': 'brown',
+        'source-arrow-shape': 'triangle',
+        'arrow-scale': 2,
+        'curve-style': 'straight',
+      }
+    },
+    {
+      selector: 'edge.express_to_express',
+      style: {
+      }
+    },
+    /*{
+      selector: 'edge.mc.node_internal.highlighted',
+      style: {
+        'curve-style': 'bezier',
+        'control-point-step-size': 4,
+      }
+    },*/
+  ],
+
+});
+
+const rotated = (cx, cy, x, y, angle) => {
+  let rad = (Math.PI / 180) * angle;
+  let cos = Math.cos(rad);
+  let sin = Math.sin(rad);
+  return {
+    x: (cos * (x - cx)) + (sin * (y - cy)) + cx,
+    y: (cos * (y - cy)) - (sin * (x - cx)) + cy,
+  };
+}
+
+const addRoadm = (cy, leafPorts, name, x, y, orientation, linkClasses) => {
+  let step_leaf = 30;
+  let step_width = 40;
+  cy.add([{
+    group: 'nodes',
+    data: {
+      label: name,
+      id: `ROADM-${name}`,
+    },
+    position: {x: x, y: y},
+    classes: ['roadm'],
+  }, {
+    group: 'nodes',
+    data: {
+      id: `ROADM-${name}-C`,
+      label: (leafPorts == 9 ? 'LINE' : 'EXPRESS'),
+      parent: `ROADM-${name}`,
+      roadm: name,
+      port_name: 'C',
+    },
+    position: rotated(x, y, x - step_width, y, orientation),
+    classes: ['port', 'common'],
+  }]);
+  for (let i = 1; i <= leafPorts; ++i) {
+    let coef = orientation > -90 && orientation <= 90 ? 1 : -1;
+    cy.add({
+      group: 'nodes',
+      data: {
+        id: `ROADM-${name}-${i}`,
+        label: `${i}`,
+        parent: `ROADM-${name}`,
+        roadm: name,
+        port_name: i,
+      },
+      position: rotated(x, y, x + step_width, y - coef * leafPorts * step_leaf / 2 + i * step_leaf * coef, orientation),
+      classes: ['port', 'leaf'],
+    });
+    cy.add({
+      group: 'edges',
+      data: {
+        id: `int-ROADM-${name}-${i}`,
+        source: `ROADM-${name}-C`,
+        target: `ROADM-${name}-${i}`,
+        roadm: name,
+        leaf: i,
+      },
+      classes: ['intlink'],
+    });
+  }
+};
+
+const addLineDegree = (cy, name, x, y, orientation) => addRoadm(cy, 9, name, x, y, orientation);
+const addCoherentAddDrop = (cy, name, x, y, orientation) => {
+  const leafPorts = 8;
+  addRoadm(cy, leafPorts, name, x, y, orientation);
+  const roadm = cy.getElementById(`ROADM-${name}`);
+  for (let i = 1; i <= leafPorts; ++i) {
+    const edge = cy.getElementById(`int-ROADM-${name}-${i}`);
+    edge.classes(edge.classes().concat(['always_full_spectrum']));
+  }
+}
+const addFlexAddDrop = (cy, name, x, y, orientation) => addRoadm(cy, 20, name, x, y, orientation);
+
+const addLink = (cy, a_roadm, a_port, b_roadm, b_port) => {
+  const always_full_spectrum_b_a = cy.getElementById(`int-ROADM-${b_roadm}-1`).classes().includes('always_full_spectrum');
+  let cls = [];
+  if (a_port == 'C' && cy.getElementById(`int-ROADM-${a_roadm}-1`).classes().includes('always_full_spectrum')) {
+    cls = cls.concat(['always_full_spectrum_forward']);
+  }
+  if (b_port == 'C' && cy.getElementById(`int-ROADM-${b_roadm}-1`).classes().includes('always_full_spectrum')) {
+    cls = cls.concat(['always_full_spectrum_backward']);
+  }
+  return cy.add({
+    group: 'edges',
+    data: {
+      id: `link-${a_roadm}-${a_port}--${b_roadm}-${b_port}`,
+      // FIXME: ugly rendering (crosses other ports)
+      source: `ROADM-${a_roadm}-${a_port}`,
+      target: `ROADM-${b_roadm}-${b_port}`,
+      //source: `ROADM-${a_roadm}`,
+      //target: `ROADM-${b_roadm}`,
+    },
+    classes: cls,
+  });
+};
+
+
+addCoherentAddDrop(cy, 'coherent-add-drop-v9u', 100, 400, 180);
+addLineDegree(cy, "line-qr79", 400, 200, 210);
+addLineDegree(cy, "line-q7js", 400, 600, 150);
+addLineDegree(cy, "line-qcp9", 1500, 200, -30);
+addLineDegree(cy, "line-wkp", 1500, 600, 30);
+addFlexAddDrop(cy, 'add-drop-spi', 1800, 400, 0);
+
+addLineDegree(cy, "line-tqq", 700, 1000, -45);
+addLineDegree(cy, "line-qlk6", 1200, 1000, -135);
+
+const longLinks = [
+ ['line-qr79', 'line-qcp9'],
+ ['line-q7js', 'line-tqq'],
+ ['line-wkp', 'line-qlk6'],
+];
+const addDropLinks = [
+ {ad: 'coherent-add-drop-v9u', degrees: {'line-qr79': '2', 'line-q7js': '2'}},
+ {ad: 'add-drop-spi', degrees: {'line-qcp9': '2', 'line-wkp': '2'}},
+];
+const expressLinks = [
+ {a_name: 'line-qr79', a_port: '1', b_name: 'line-q7js', b_port: '1'},
+ {a_name: 'line-tqq', a_port: '1', b_name: 'line-qlk6', b_port: '1'},
+ {a_name: 'line-qcp9', a_port: '1', b_name: 'line-wkp', b_port: '1'},
+];
+
+for (const link of longLinks) {
+  addLink(cy, link[0], 'C', link[1], 'C').forEach((edge) => {
+    edge.data().roadm_west = link[0];
+    edge.data().roadm_east = link[1];
+  });
+}
+for (const link of addDropLinks) {
+  for (const [deg, port] of Object.entries(link.degrees)) {
+    addLink(cy, link.ad, 'C', deg, port);
+  }
+}
+for (const link of expressLinks) {
+  addLink(cy, link.a_name, link.a_port, link.b_name, link.b_port).forEach((edge) => {
+    edge.classes(edge.classes().concat(['express_to_express']));
+  })
+}
+
+
+const activateGenericMC = (cy, roadm_a, port_a, roadm_b, port_b, classes, mc) => {
+  return cy.add([
+  {
+    data: {
+      source: `ROADM-${roadm_a}-${port_a}`,
+      target: `ROADM-${roadm_b}-${port_b}`,
+      optical_mc: mc,
+    },
+    classes: classes.concat(['mc', 'highlighted',]),
+  },
+  {
+    data: {
+      target: `ROADM-${roadm_a}-${port_a}`,
+      source: `ROADM-${roadm_b}-${port_b}`,
+      optical_mc: mc,
+    },
+    classes: classes.concat(['mc', 'highlighted',]),
+  },
+  ]);
+};
+
+const activateLongMC = (cy, roadm_a, roadm_b, mc) => activateGenericMC(cy, roadm_a, 'C', roadm_b, 'C', [], mc);
+const activateExpressMC = (cy, roadm_a, port_a, roadm_b, port_b, mc) => activateGenericMC(cy, roadm_a, port_a, roadm_b, port_b, [], mc);
+
+const edgesForInternalMC = (roadm, leaf, mc, direction) => {
+  let leaf_name = `ROADM-${roadm}-${leaf}`;
+  let common_name = `ROADM-${roadm}-C`;
+  let edges = [{
+    data: {
+      id: `MC-${direction}-${mc}-${roadm}-${leaf}-internal`,
+      source: direction == 'ADD' ? leaf_name : common_name,
+      target: direction == 'ADD' ? common_name : leaf_name,
+      optical_mc: mc,
+    },
+    classes: ['node_internal'],
+  }];
+  if (direction == 'ADD') {
+    for (const link of addDropLinks) {
+      if (link.ad == roadm) {
+        for (const [another_roadm, another_port] of Object.entries(link.degrees)) {
+          edges.push({data: {
+              id: `MC-${direction}-${mc}-${roadm}-${leaf}-express-add`,
+              source: `ROADM-${roadm}-C`,
+              target: `ROADM-${another_roadm}-${another_port}`,
+            },
+          });
+        }
+      }
+    }
+    for (const link of longLinks) {
+      if (link[0] == roadm) {
+        edges.push({
+          data: {
+            id: `MC-${direction}-${mc}-LINE-${roadm}-${link[1]}`,
+            source: `ROADM-${roadm}-C`,
+            target: `ROADM-${link[1]}-C`,
+          },
+        });
+      } else if (link[1] == roadm) {
+        edges.push({
+          data: {
+            id: `MC-${direction}-${mc}-LINE-${roadm}-${link[0]}`,
+            source: `ROADM-${roadm}-C`,
+            target: `ROADM-${link[0]}-C`,
+          },
+        });
+      }
+    }
+  } else { // DROP
+    for (const link of addDropLinks) {
+      for (const [degree_roadm, degree_port] of Object.entries(link.degrees)) {
+        if (degree_roadm == roadm && degree_port == leaf) {
+          edges.push({data: {
+              id: `MC-${direction}-${mc}-${roadm}-${leaf}-express-drop`,
+              source: `ROADM-${roadm}-${leaf}`,
+              target: `ROADM-${link.ad}-C`,
+            },
+          });
+        }
+      }
+    }
+    for (const link of expressLinks) {
+      if (link.a_name == roadm && link.a_port == leaf) {
+        edges.push({data: {
+            id: `MC-${direction}-${mc}-${roadm}-${leaf}-EXPRESS-${link.b_name}-${link.b_port}`,
+            source: `ROADM-${roadm}-${leaf}`,
+            target: `ROADM-${link.b_name}-${link.b_port}`,
+          },
+          classes: ['express_to_express'],
+        });
+      } else if (link.b_name == roadm && link.b_port == leaf) {
+        edges.push({data: {
+            id: `MC-${direction}-${mc}-${roadm}-${leaf}-EXPRESS-${link.a_name}-${link.a_port}`,
+            source: `ROADM-${roadm}-${leaf}`,
+            target: `ROADM-${link.a_name}-${link.a_port}`,
+          },
+          classes: ['express_to_express'],
+        });
+      }
+    }
+  }
+  return edges;
+};
+
+const activateInternalMC = (cy, roadm, leaf, mc, direction) => {
+  let edges = edgesForInternalMC(roadm, leaf, mc, direction);
+  let classes = ['mc', 'highlighted',];
+  edges.forEach((edge) => {
+    edge.data.optical_mc = mc;
+    edge.data.roadm = roadm;
+    edge.data.leaf = leaf;
+    if (edge.classes === undefined) {
+      edge.classes = classes;
+    } else {
+      edge.classes = edge.classes.concat(classes);
+    }
+  });
+  return cy.add(edges);
+};
+
+const deactivateInternalMC = (cy, roadm, leaf, mc, direction) => {
+  let edges = edgesForInternalMC(roadm, leaf, mc, direction);
+  edges.forEach((edge) => {
+    cy.getElementById(edge.data.id).remove();
+  });
+}
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+function onMCprovisioned(roadm, port, mc) {
+  activateInternalMC(cy, roadm, port, mc, 'ADD');
+  activateInternalMC(cy, roadm, port, mc, 'DROP');
+}
+
+var MCs = {};
+
+const getLeafPort = (s) => s.startsWith('E') ? s.substring(1) : s;
+
+function listenForRoadm(roadm) {
+  //let eventStream = new EventSource(`http://${roadm}.fitlab.czechlight.cesnet.cz/telemetry/optics`);
+  let eventStream = new EventSource(`http://${roadm}/telemetry/optics`);
+  MCs[roadm] = {
+    add: {},
+    drop: {},
+  };
+  eventStream.onerror = (e) => {
+    console.log(`error ${e} for ROADM ${roadm}`)
+  }
+  eventStream.onmessage = (e) => {
+    let data = JSON.parse(e.data)["ietf-restconf:notification"]["ietf-yang-push:push-update"]["datastore-contents"];
+    for (const mc of data['czechlight-roadm-device:media-channels']) {
+      const handle = (oldMcData, mcData, direction, name) => {
+        const leaf = mcData !== undefined ? getLeafPort(mcData.port) : undefined;
+        if (oldMcData[name] === undefined && leaf !== undefined) {
+          console.log(`ROADM ${roadm} MC ${name} now ${direction} via ${leaf}`);
+          activateInternalMC(cy, roadm, leaf, name, direction);
+        } else if (oldMcData[name] !== undefined && leaf === undefined) {
+          console.log(`ROADM ${roadm} MC ${name} ${direction}: removed (was ${oldMcData[name]})`);
+          deactivateInternalMC(cy, roadm, oldMcData[name], name, direction);
+        } else if (oldMcData[name] != leaf) {
+          deactivateInternalMC(cy, roadm, oldMcData[name], name, direction);
+          console.log(`ROADM ${roadm} MC ${name} ${direction}: moved from ${oldMcData[name]} to ${leaf}`);
+          activateInternalMC(cy, roadm, leaf, name, direction);
+        }
+        oldMcData[name] = leaf;
+      };
+      handle(MCs[roadm].add, mc.add, 'ADD', mc.channel);
+      handle(MCs[roadm].drop, mc.drop, 'DROP', mc.channel);
+    }
+  }
+}
+
+listenForRoadm('line-qr79');
+listenForRoadm('line-qcp9');
+listenForRoadm('add-drop-spi');
+listenForRoadm('line-tqq');
+listenForRoadm('line-wkp');
+
+/*onMCprovisioned('line-qr79', 2, '13.5');
+onMCprovisioned('line-qcp9', 2, '13.5');
+onMCprovisioned('add-drop-spi', 20, '13.5');*/
+
+cy.on('tap', 'edge', (ev) => {
+  const edge = ev.target;
+  let mc = edge.data().optical_mc;
+  if (mc === undefined) {
+    console.log(`No MC`);
+  } else {
+    console.log(`Selected MC: ${mc}`);
+    document.getElementById('graph').src = `http://datel:3000/d-solo/C-_xiUwMk/one-mc-in-the-network?orgId=1&panelId=2&refresh=100ms&var-MC=${mc}`
+  }
+  if (cy.getElementById(edge.data().source).parent() != cy.getElementById(edge.data().target).parent()) {
+    const roadm_west = edge.data().roadm_west;
+    const roadm_east = edge.data().roadm_east;
+    console.log(`Different ROADMs: ${roadm_west}, ${roadm_east}`);
+    if (roadm_west !== undefined && roadm_east !== undefined) {
+      document.getElementById('graph').src = `http://datel:3000/d-solo/7UhaqywGk/line-span-attenuation?orgId=1&panelId=2&refresh=100ms&var-west=${roadm_west}&var-east=${roadm_east}`
+    }
+  }
+  /*if (cy.getElementById(edge.data().source).parent() == cy.getElementById(edge.data().target).parent()) {
+    const roadm = edge.data().roadm;
+    const leaf = edge.data().leaf;
+    deactivateInternalMC(cy, roadm, leaf, mc, 'ADD');
+    deactivateInternalMC(cy, roadm, leaf, mc, 'DROP');
+  }*/
+});
+cy.on('tap', 'node', (ev) => {
+  const node = ev.target;
+  const roadm = node.data().roadm;
+  const port_name = node.data().port_name;
+  if (roadm !== undefined && port_name == 'C') {
+    document.getElementById('graph').src = `http://datel:3000/d-solo/ed5UZUwMz/spectrum-scan?orgId=1&panelId=2&refresh=1s&var-host=${roadm}`
+  }
+});
+cy.on('tap', (ev) => {
+  if (ev.target === cy) {
+    document.getElementById('graph').src = 'about:blank';
+  }
+});
+
+//document.getElementById('graph').src = `http://datel:3000/d-solo/7UhaqywGk/line-span-attenuation?orgId=1&panelId=2&var-west=line-qr79&var-east=line-qcp9`
+
+</script>
+</body>
+</html>
