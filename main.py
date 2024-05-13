@@ -60,6 +60,18 @@ def extract_data(ds, hostname):
     except KeyError:
         pass
 
+    try:
+        for band in ('c-band', 'narrow-1572'):
+            try:
+                agg = ds[f'czechlight-bidi-amp:{band}']
+                for direction in ('east-to-west', 'west-to-east'):
+                    for port in ('input', 'output'):
+                        push_gauge(buf, 'optical_power', {'host': hostname, 'channel': band, 'where': f'{direction}-{port}'}, agg[direction][f'{port}-power'])
+            except KeyError:
+                continue
+    except KeyError:
+        pass
+
     return buf
 
 
