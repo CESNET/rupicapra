@@ -21,6 +21,16 @@ def extract_data(ds, hostname):
     buf = []
 
     try:
+        for module in ('czechlight-bidi-amp:narrow-1572', 'czechlight-bidi-amp:c-band'):
+            module_data = ds[module]
+            push_gauge(buf, 'pump_current', {'host': hostname, 'module': module}, module_data['pump'])
+            for direction in ('east-to-west', 'west-to-east'):
+                for point in ('input-power', 'output-power'):
+                    push_gauge(buf, 'optical_power', {'host': hostname, 'module': module, 'direction': direction, 'where': point}, module_data[direction][point])
+    except KeyError:
+        pass
+
+    try:
         MCs = ds['czechlight-roadm-device:media-channels']
         for channel in MCs:
             for point in ('common-in', 'common-out', 'leaf-in', 'leaf-out'):
