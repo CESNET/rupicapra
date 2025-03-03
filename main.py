@@ -4,6 +4,7 @@ import asyncio
 import json
 import sys
 import urllib
+import argparse
 
 
 def plain_port(port):
@@ -110,24 +111,35 @@ async def read_via_restconf(hostname, queue):
             await asyncio.sleep(1)
 
 
-async def push_to_tsdb(queue):
+async def push_to_tsdb(queue, tsdb_url):
     timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
     while True:
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 while True:
                     entry = await queue.get()
-                    async with session.post('http://localhost:8428/api/v1/import/prometheus', data=entry) as resp:
+                    async with session.post(tsdb_url, data=entry) as resp:
                         await resp.text()
         except aiohttp.client_exceptions.ClientError as e:
             print(e)
             await asyncio.sleep(1)
 
 
-async def main(urls):
+async def main(devices, tsdb_url):
     queue = asyncio.Queue()
-    await asyncio.gather(push_to_tsdb(queue), *(read_via_restconf(url, queue) for url in urls))
+    await asyncio.gather(push_to_tsdb(queue, tsdb_url), *(read_via_restconf(hostname, queue) for hostname in devices))
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main(sys.argv[1:]))
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="This is the telemetry collector for czechlight devices. Supports CzechLight SDN ROADM and CzechLight SDN BiDi Amps.")
+    parser.add_argument('--tsdb-url', metavar='URL', default='http://localhost:8428/api/v1/import/prometheus', type=str, help='Full URL towards the Prometheus-compatible TSDB API')
+    parser.add_argument('devices', metavar='DEVICE', type=str, nargs='+', help='List of devices (IP addresses or hostnames).')
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    args = parse_arguments()
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main(args.devices, args.tsdb_url))
