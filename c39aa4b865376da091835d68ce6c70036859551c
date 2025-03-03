@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4987d5dc_8a10d986",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-03-03T15:42:02Z",
+      "side": 1,
+      "message": "This commit doesn\u0027t touch that part (which is a good thing because that should be done in a separate commit).",
+      "range": {
+        "startLine": 7,
+        "startChar": 40,
+        "endLine": 7,
+        "endChar": 65
+      },
+      "revId": "c39aa4b865376da091835d68ce6c70036859551c",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b710d58b_b94a3b8b",
+        "filename": "main.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-03-03T15:42:02Z",
+      "side": 1,
+      "message": "nit: maybe `edfa_pump_current`, so that it\u0027s clear what pumping it\u0027s about?",
+      "range": {
+        "startLine": 26,
+        "startChar": 29,
+        "endLine": 26,
+        "endChar": 41
+      },
+      "revId": "c39aa4b865376da091835d68ce6c70036859551c",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    }
+  ]
+}
