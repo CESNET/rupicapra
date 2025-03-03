@@ -4,6 +4,7 @@ import asyncio
 import json
 import sys
 import urllib
+import argparse
 
 
 def plain_port(port):
@@ -19,6 +20,16 @@ def push_gauge(buf, name, params, value):
 
 def extract_data(ds, hostname):
     buf = []
+
+    try:
+        for module in ('czechlight-bidi-amp:narrow-1572', 'czechlight-bidi-amp:c-band'):
+            module_data = ds[module]
+            push_gauge(buf, 'edfa_pump_current', {'host': hostname, 'module': module}, module_data['pump'])
+            for direction in ('east-to-west', 'west-to-east'):
+                for point in ('input-power', 'output-power'):
+                    push_gauge(buf, 'optical_power', {'host': hostname, 'module': module, 'direction': direction, 'where': point}, module_data[direction][point])
+    except KeyError:
+        pass
 
     try:
         MCs = ds['czechlight-roadm-device:media-channels']
