@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "da20ce7e_cb4f9036",
+        "filename": "main.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-03-05T11:20:40Z",
+      "side": 1,
+      "message": "I went through some wip-patch from May 2024 that I apparently never pushed (oopsie), and here\u0027s how it\u0027s done there:\n\n    try:\n        for band in (\u0027c-band\u0027, \u0027narrow-1572\u0027):\n            try:\n                agg \u003d ds[f\u0027czechlight-bidi-amp:{band}\u0027]\n                for direction in (\u0027east-to-west\u0027, \u0027west-to-east\u0027):\n                    for port in (\u0027input\u0027, \u0027output\u0027):\n                        push_gauge(buf, \u0027optical_power\u0027, {\u0027host\u0027: hostname, \u0027channel\u0027: band, \u0027where\u0027: f\u0027{direction}-{port}\u0027}, agg[direction][f\u0027{port}-power\u0027])\n            except KeyError:\n                continue\n    except KeyError:\n        pass\n\nI wonder which of these is \"more intuitive\" in the series labeling. I prefer mine because the amplifier has physically different ports for each frequency band.",
+      "range": {
+        "startLine": 30,
+        "startChar": 53,
+        "endLine": 30,
+        "endChar": 160
+      },
+      "revId": "f00ac4c8df46a8be0ee3bbf67a187f01eb7e5249",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    }
+  ]
+}
