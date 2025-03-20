@@ -64,6 +64,7 @@ def extract_data(ds, hostname):
         for band in ('c-band', 'narrow-1572'):
             try:
                 agg = ds[f'czechlight-bidi-amp:{band}']
+                push_gauge(buf, 'pump_current_set', {'host': hostname, 'channel': band}, agg['pump'])
                 for direction in ('east-to-west', 'west-to-east'):
                     for port in ('input', 'output'):
                         push_gauge(buf, 'optical_power', {'host': hostname, 'channel': band, 'where': f'{direction}-{port}'}, agg[direction][f'{port}-power'])
