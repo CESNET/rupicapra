@@ -69,6 +69,8 @@ def extract_data(ds, hostname):
                     if agg['pump'] == "disabled":
                         agg['pump'] = 0
                     push_gauge(buf, 'pump_current_set', {'host': hostname, 'channel': band}, agg['pump'])
+                if 'real-pump-current' in agg:
+                    push_gauge(buf, 'real_pump_current', {'host': hostname, 'channel': band}, agg['real-pump-current'])
                 for direction in ('east-to-west', 'west-to-east'):
                     for port in ('input', 'output'):
                         push_gauge(buf, 'optical_power', {'host': hostname, 'channel': band, 'where': f'{direction}-{port}'}, agg[direction][f'{port}-power'])
