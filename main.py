@@ -102,7 +102,7 @@ def extract_spectrum(buf, ds, hostname):
         pass
 
 
-async def read_via_restconf(hostname, queue):
+async def read_via_restconf(hostname, no_spectrum_scan, spectrum_scan_only, queue):
     print(f'Handling {hostname}')
     url = urllib.parse.urlunparse(('http', hostname, '/telemetry/optics', None, None, None))
     while True:
@@ -110,11 +110,15 @@ async def read_via_restconf(hostname, queue):
         try:
             async for block in aiosseclient(url):
                 ds = json.loads(block)['ietf-restconf:notification']['ietf-yang-push:push-update']['datastore-contents']
-                buf = extract_data(ds, hostname)
-                spectrum = ds.get('czechlight-roadm-device:spectrum-scan', None)
-                if spectrum is not None and last_spectrum != ds['czechlight-roadm-device:spectrum-scan']:
-                    extract_spectrum(buf, ds, hostname)
-                    last_spectrum = ds['czechlight-roadm-device:spectrum-scan']
+                if not spectrum_scan_only:
+                    buf = extract_data(ds, hostname)
+                else:
+                    buf = []
+                if not no_spectrum_scan:
+                    spectrum = ds.get('czechlight-roadm-device:spectrum-scan', None)
+                    if spectrum is not None and last_spectrum != ds['czechlight-roadm-device:spectrum-scan']:
+                        extract_spectrum(buf, ds, hostname)
+                        last_spectrum = ds['czechlight-roadm-device:spectrum-scan']
                 if len(buf):
                     print(f'{hostname} -> {len(buf)}')
                     await queue.put('\n'.join(buf))
@@ -138,15 +142,17 @@ async def push_to_tsdb(queue, tsdb_url):
             await asyncio.sleep(1)
 
 
-async def main(devices, tsdb_url):
+async def main(devices, tsdb_url, no_spectrum_scan, spectrum_scan_only):
     queue = asyncio.Queue()
-    await asyncio.gather(push_to_tsdb(queue, tsdb_url), *(read_via_restconf(hostname, queue) for hostname in devices))
+    await asyncio.gather(push_to_tsdb(queue, tsdb_url), *(read_via_restconf(hostname, no_spectrum_scan, spectrum_scan_only, queue) for hostname in devices))
 
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="This is the telemetry collector for czechlight devices. Supports CzechLight SDN ROADM and CzechLight SDN BiDi Amps.")
     parser.add_argument('--tsdb-url', metavar='URL', default='http://localhost:8428/api/v1/import/prometheus', type=str, help='Full URL towards the Prometheus-compatible TSDB API')
+    parser.add_argument('--no-spectrum-scan', action='store_true', help='Do not read spectrum scan data')
+    parser.add_argument('--spectrum-scan-only', action='store_true', help='Read only spectrum scan data')
     parser.add_argument('devices', metavar='DEVICE', type=str, nargs='+', help='List of devices (IP addresses or hostnames).')
 
     return parser.parse_args()
@@ -155,4 +161,4 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(args.devices, args.tsdb_url))
+    loop.run_until_complete(main(args.devices, args.tsdb_url, args.no_spectrum_scan, args.spectrum_scan_only))
