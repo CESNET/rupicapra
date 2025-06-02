@@ -86,6 +86,18 @@ def extract_data(ds, hostname):
     except KeyError:
         pass
 
+    try:
+        for direction in ('west-to-east', 'east-to-west'):
+            try:
+                agg = ds[f'czechlight-inline-amp:{direction}']
+                push_gauge(buf, 'output_voa', {'host': hostname, 'channel': '', 'where': f'{direction}'}, agg['output-voa'])
+                for port, pretty in (('input', 'in'), ('output', 'out')):
+                    push_gauge(buf, 'optical_power', {'host': hostname, 'channel': '', 'where': f'{direction}-{pretty}'}, agg["optical-power"][f'{port}'])
+            except KeyError:
+                continue
+    except KeyError:
+        pass
+
     return buf
 
 
