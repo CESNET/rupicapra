@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d63a647f_70e52794",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T13:36:51Z",
+      "side": 1,
+      "message": "Please wrap the commit message at 72 chars. It\u0027s a long-standing tradition that we follow here, even if it\u0027s \"a bit silly\".",
+      "revId": "335ed12a98db93cf5a2093b46c3b8cce08d9995a",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f62d0de0_fd9fb82d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T13:36:51Z",
+      "side": 1,
+      "message": "Please also explain why you need this (you said it\u0027s about space saving, so please put that into the commit message).\n\nI also wanted to suggest using https://docs.victoriametrics.com/#multiple-retentions , but it\u0027s only a feature of the \"enterprise\" release of the VM, and there\u0027s also a minimal limit of 24 hrs for the retention period.",
+      "revId": "335ed12a98db93cf5a2093b46c3b8cce08d9995a",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cb25e5dc_aa2b5ff0",
+        "filename": "main.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T13:36:51Z",
+      "side": 1,
+      "message": "I suggest to drop this feature (unless there\u0027s some use case for that that you can define)",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 155,
+        "endChar": 2
+      },
+      "revId": "335ed12a98db93cf5a2093b46c3b8cce08d9995a",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    }
+  ]
+}
