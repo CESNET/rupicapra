@@ -79,8 +79,8 @@ def extract_data(ds, hostname):
                     if 'measured-current' in agg2:
                         push_gauge(buf, 'real_pump_current', {'host': hostname, 'channel': band}, agg2['measured-current'])
                 for direction in ('east-to-west', 'west-to-east'):
-                    for port in ('input', 'output'):
-                        push_gauge(buf, 'optical_power', {'host': hostname, 'channel': band, 'where': f'{direction}-{port}'}, agg[direction][f'{port}-power'])
+                    for port, pretty in (('input', 'in'), ('output', 'out')):
+                        push_gauge(buf, 'optical_power', {'host': hostname, 'channel': band, 'where': f'{direction}-{pretty}'}, agg[direction][f'{port}-power'])
             except KeyError:
                 continue
     except KeyError:
