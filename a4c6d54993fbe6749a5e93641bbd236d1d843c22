@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "db4b5e48_7f2056f9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T14:39:33Z",
+      "side": 1,
+      "message": "Let\u0027s reformat it like this (so that there\u0027s a short summary followed by a blank line followed by a longer description):\n```\nadd support for inline amps\n\nThis collects the input/output power and the output-VOA settings because \nthese amplifiers do not really export anything else.\n```",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 40
+      },
+      "revId": "a4c6d54993fbe6749a5e93641bbd236d1d843c22",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "23ef66af_6139c296",
+        "filename": "main.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T14:39:33Z",
+      "side": 1,
+      "message": "please also implement this readout of TX/RX power for the OSC channel at the `oscW`, `oscE` interfaces on the inline amps",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 2
+      },
+      "revId": "a4c6d54993fbe6749a5e93641bbd236d1d843c22",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a7ef0cfb_3b5dede2",
+        "filename": "main.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T14:39:33Z",
+      "side": 1,
+      "message": "All the ROADM types also tag these metrics with `\u0027channel\u0027: \u0027\u0027`, so I think it would be nice to follow that pattern here as well. I think that it was meant to suggest \"this is a power monitor which applies to an entire spectrum with no filters whatsoever\".\n\nOne could argue that it should have said something like `\u0027channel\u0027: \u0027c-band\u0027`, but that\u0027s not what the ROADMs are reporting. We could change that later, but for now please sync the inline-amp reporting with the ROADMs.",
+      "range": {
+        "startLine": 95,
+        "startChar": 53,
+        "endLine": 95,
+        "endChar": 103
+      },
+      "revId": "a4c6d54993fbe6749a5e93641bbd236d1d843c22",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "adcc611d_83e8289b",
+        "filename": "main.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T14:39:33Z",
+      "side": 1,
+      "message": "The ROADMs have a convention where these \"ports\" within a duplex connector are called `in` and `out`. The BIDIs call the two internal monitoring taps `input` and `output`. I don\u0027t like this inconsistency. Would you be OK with:\n\n- changing the BIDIs to use `in` and `out` as metric names (in a separate commit)\n- ammending this commit so that it\u0027s also using `in` and `out` here?",
+      "range": {
+        "startLine": 95,
+        "startChar": 95,
+        "endLine": 95,
+        "endChar": 101
+      },
+      "revId": "a4c6d54993fbe6749a5e93641bbd236d1d843c22",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    }
+  ]
+}
