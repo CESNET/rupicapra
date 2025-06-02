@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7a84f31e_1991b881",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-06-02T15:36:36Z",
+      "side": 1,
+      "message": "nit: just for future reference, the commit summary is usually written without the trailing period (i.e., not as a sentence)",
+      "range": {
+        "startLine": 7,
+        "startChar": 27,
+        "endLine": 7,
+        "endChar": 28
+      },
+      "revId": "d34789d978575a159fb0d19434054cea52b05ca4",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    }
+  ]
+}
