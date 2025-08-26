@@ -120,17 +120,20 @@ async def read_via_restconf(hostname, no_spectrum_scan, queue):
     while True:
         last_spectrum = None
         try:
-            async for block in aiosseclient(url):
-                ds = json.loads(block)['ietf-restconf:notification']['ietf-yang-push:push-update']['datastore-contents']
-                buf = extract_data(ds, hostname)
-                if not no_spectrum_scan:
-                    spectrum = ds.get('czechlight-roadm-device:spectrum-scan', None)
-                    if spectrum is not None and last_spectrum != ds['czechlight-roadm-device:spectrum-scan']:
-                        extract_spectrum(buf, ds, hostname)
-                        last_spectrum = ds['czechlight-roadm-device:spectrum-scan']
-                if len(buf):
-                    print(f'{hostname} -> {len(buf)}')
-                    await queue.put('\n'.join(buf))
+            print(f'Connecting to {url}')
+            async def sse_read():
+                async for block in aiosseclient(url):
+                    ds = json.loads(block)['ietf-restconf:notification']['ietf-yang-push:push-update']['datastore-contents']
+                    buf = extract_data(ds, hostname)
+                    if not no_spectrum_scan:
+                        spectrum = ds.get('czechlight-roadm-device:spectrum-scan', None)
+                        if spectrum is not None and last_spectrum != ds['czechlight-roadm-device:spectrum-scan']:
+                            extract_spectrum(buf, ds, hostname)
+                            last_spectrum = ds['czechlight-roadm-device:spectrum-scan']
+                    if len(buf):
+                        print(f'{hostname} -> {len(buf)}')
+                        await queue.put('\n'.join(buf))
+            await asyncio.wait_for(sse_read(), timeout=90)
 
         except Exception as e:
             print(hostname, e)
