@@ -120,7 +120,8 @@ async def read_via_restconf(hostname, no_spectrum_scan, queue):
     while True:
         last_spectrum = None
         try:
-            async for block in aiosseclient(url):
+            timeout = aiohttp.ClientTimeout(total=None, connect=10, sock_connect=10, sock_read=60)
+            async for block in aiosseclient(url, timeout=timeout):
                 ds = json.loads(block)['ietf-restconf:notification']['ietf-yang-push:push-update']['datastore-contents']
                 buf = extract_data(ds, hostname)
                 if not no_spectrum_scan:

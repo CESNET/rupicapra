@@ -2,7 +2,7 @@ import aiohttp
 
 
 # taken from https://github.com/ebraminio/aiosseclient/blame/main/aiosseclient.py
-async def aiosseclient(url, last_id=None, **kwargs):
+async def aiosseclient(url, last_id=None, timeout=None, **kwargs):
     if 'headers' not in kwargs:
         kwargs['headers'] = {}
 
@@ -15,8 +15,10 @@ async def aiosseclient(url, last_id=None, **kwargs):
     if last_id:
         kwargs['headers']['Last-Event-ID'] = last_id
 
-    # Override default timeout of 5 minutes
-    timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
+    if timeout is None:
+        # Override default timeout of 5 minutes
+        timeout = aiohttp.ClientTimeout(total=None, connect=None, sock_connect=None, sock_read=None)
+
     async with aiohttp.ClientSession(timeout=timeout) as session:
         response = await session.get(url, **kwargs)
         lines = []
