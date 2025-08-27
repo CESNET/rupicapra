@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bbb30b0c_acf2b36d",
+        "filename": "main.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1000000
+      },
+      "writtenOn": "2025-08-27T13:01:35Z",
+      "side": 1,
+      "message": "This line will hard-terminate the `sse_read()` invocation after 90 seconds. I\u0027ll take a look at the SSE library (as well as its forks/alternatives) to see if there\u0027s a better way of checking these data.",
+      "revId": "35c1c6ae54b0f478fee114476beb1ef2fcdfdd47",
+      "serverId": "e32f8df8-3db0-4f76-a6c6-fe9d6e69dd68"
+    }
+  ]
+}
