@@ -25,8 +25,12 @@ async def aiosseclient(url, last_id=None, timeout=None, **kwargs):
         async for line in response.content:
             line = line.decode('utf8')
 
-            if line == '\n' or line == '\r' or line == '\r\n':
-                yield ''.join(lines)
+            if line.startswith(':'):
+                # comment as defined by https://html.spec.whatwg.org/multipage/server-sent-events.html#parsing-an-event-stream
+                continue
+            elif line == '\n' or line == '\r' or line == '\r\n':
+                if len(lines):
+                    yield ''.join(lines)
                 lines = []
             elif line.startswith('data: '):
                 lines.append(line[len('data: '):])
