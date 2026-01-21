@@ -22,7 +22,7 @@ def extract_data(ds, hostname):
     buf = []
 
     try:
-        MCs = ds['czechlight-roadm-device:media-channels']
+        MCs = ds['czechlight-roadm-device:mc']['media-channel']
         for channel in MCs:
             for point in ('common-in', 'common-out', 'leaf-in', 'leaf-out'):
                 if point in channel['power']:
@@ -49,7 +49,7 @@ def extract_data(ds, hostname):
         agg = ds['czechlight-coherent-add-drop:aggregate-power']
         for point in ('drop', 'express-in', 'express-out'):
             push_gauge(buf, 'optical_power', {'host': hostname, 'channel': '', 'where': point}, agg[point])
-        for port in ds['czechlight-coherent-add-drop:client-ports']:
+        for port in ds['czechlight-coherent-add-drop:client-ports']['port']:
             push_gauge(buf, 'optical_power', {'host': hostname, 'channel': '', 'where': port['port']}, port['input-power'])
     except KeyError:
         pass
