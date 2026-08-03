@@ -13,9 +13,35 @@ def plain_port(port):
     return port
 
 
+def _escape_prom_label_value(s: str):
+    r'''Escape stuff for prometheus label values
+
+    >>> print(_escape_prom_label_value('foo'))
+    foo
+    >>> print(_escape_prom_label_value(666))
+    666
+    >>> print(_escape_prom_label_value('x"y\'z\\0\n1'))
+    x\"y'z\\0\n1
+    '''
+    return str(s).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+
+
+def format_prometheus_metric(name: str, params: dict[str, str]):
+    r'''Serialize a prometheus metric with labels
+
+    >>> format_prometheus_metric('xxx', {'foo': 666, 'bar': 'yay'})
+    'xxx{foo="666",bar="yay"}'
+    >>> format_prometheus_metric('foo', {'a': 'b"c'})
+    'foo{a="b\\"c"}'
+    >>> format_prometheus_metric('foo', {})
+    'foo{}'
+    '''
+    keys = ','.join(f'{k}="{_escape_prom_label_value(v)}"' for (k, v) in params.items())
+    return f'{name}{{{keys}}}'
+
+
 def push_gauge(buf, name, params, value):
-    keys = ','.join(f'{k}="{v}"' for (k, v) in params.items())
-    buf.append(f'{name}{{{keys}}} {value}')
+    buf.append(f'{format_prometheus_metric(name, params)} {value}')
 
 
 def extract_data(ds, hostname):
