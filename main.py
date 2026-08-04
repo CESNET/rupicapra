@@ -194,6 +194,4 @@ def parse_arguments():
 
 if __name__ == "__main__":
     args = parse_arguments()
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main(args.devices, args.tsdb_url, args.no_spectrum_scan))
+    asyncio.run(main(args.devices, args.tsdb_url, args.no_spectrum_scan))
